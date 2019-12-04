@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -18,6 +19,9 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import java.util.Arrays;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 
 public class MainActivity extends Activity {
@@ -29,17 +33,31 @@ public class MainActivity extends Activity {
     static int pixels;
 
     ImageView curView = null;
+    ImageView secondView = null;
     private int countPair = 0;
-    final int[] drawable = new int[] {
+    static int[] drawable = new int[] {
             R.drawable.sample_0,
             R.drawable.sample_1,
             R.drawable.sample_2,
             R.drawable.sample_3
     };
     int[] pos = {0,1,2,3,0,1,2,3};
+    Boolean[] truePositions = {false, false, false, false, false, false, false, false};
     int currentPos = -1;
 
     Button exitButton, restartButton;
+
+    public static void shuffleArray(int[] tempArr){
+        Random rand = new Random();
+
+        for (int i = 0; i < tempArr.length; i++) {
+            int randomIndexToSwap = rand.nextInt(tempArr.length);
+            int temp = tempArr[randomIndexToSwap];
+            tempArr[randomIndexToSwap] = tempArr[i];
+            tempArr[i] = temp;
+        }
+        System.out.println(Arrays.toString(tempArr));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,14 +74,17 @@ public class MainActivity extends Activity {
         scale = this.getResources().getDisplayMetrics().density;
         pixels = (int) (150 * MainActivity.scale + 0.5f);
 
-        //loading photos
+        shuffleArray(pos); //shuffling drawable elements
+
+        //loading grids
         myPhotoAdapter photoAdapter = new myPhotoAdapter(this);
         final GridView gridView = (GridView)findViewById(R.id.gridView);
         gridView.setAdapter(photoAdapter);
 
+        //logic
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            public void onItemClick(AdapterView<?> parent, final View view, int position, long id) {
                 if (currentPos < 0 ) {
                     currentPos = position;
                     curView = (ImageView) view;
@@ -71,16 +92,36 @@ public class MainActivity extends Activity {
                 }
                 else {
                     if (currentPos == position) {
-                        ((ImageView) view).setImageResource(R.drawable.unknown);
+                        //((ImageView) view).setImageResource(R.drawable.unknown); //do nothing
                     } else if (pos[currentPos] != pos[position]) {
-                        curView.setImageResource(R.drawable.unknown);
-                        Toast.makeText(MainActivity.this, "Not Match!", Toast.LENGTH_LONG).show();
-                    } else {
                         ((ImageView) view).setImageResource(drawable[pos[position]]);
-                        countPair++;
-                        if (countPair == 4 ) {
-                            gridView.setVisibility(View.INVISIBLE);
+                        Toast.makeText(MainActivity.this, "Not Match!", Toast.LENGTH_LONG).show();
+                        Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                ((ImageView) view).setImageResource(R.drawable.unknown);
+                                curView.setImageResource(R.drawable.unknown);
+                            }
+                        }, 1000);
+
+                    } else if(pos[currentPos] == pos[position]){
+                        ((ImageView) view).setImageResource(drawable[pos[position]]);
+                        ((ImageView) view).setOnClickListener(null);
+                        curView.setOnClickListener(null);
+                        ((ImageView) view).setFocusable(false);
+                        curView.setFocusable(false);
+                        truePositions[currentPos] = true;
+                        truePositions[position] = true;
+                        if (!(Arrays.asList(truePositions).contains(false))) {
                             Toast.makeText(MainActivity.this, "You Win!", Toast.LENGTH_LONG).show();
+                            Handler handler = new Handler();
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    gridView.setVisibility(View.INVISIBLE);
+                                }
+                            }, 1000);
                         }
                     }
                     currentPos = -1;
