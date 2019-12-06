@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -32,8 +35,15 @@ public class MainActivity extends Activity {
     static float scale;
     static int pixels;
 
-    ImageView curView = null;
-    ImageView secondView = null;
+    boolean firstPress = true;
+    ImageView currentView = null;
+    ImageView oldView = null;
+    Drawable currentDrawable = null;
+    Drawable oldDrawable = null;
+
+//    ImageView curView = null;
+//    ImageView secondView = null;
+
     private int countPair = 0;
     static int[] drawable = new int[] {
             R.drawable.sample_0,
@@ -56,7 +66,6 @@ public class MainActivity extends Activity {
             tempArr[randomIndexToSwap] = tempArr[i];
             tempArr[i] = temp;
         }
-        System.out.println(Arrays.toString(tempArr));
     }
 
     @Override
@@ -74,7 +83,7 @@ public class MainActivity extends Activity {
         scale = this.getResources().getDisplayMetrics().density;
         pixels = (int) (150 * MainActivity.scale + 0.5f);
 
-        shuffleArray(pos); //shuffling drawable elements
+        shuffleArray(pos); //shuffling drawable elements positions
 
         //loading grids
         myPhotoAdapter photoAdapter = new myPhotoAdapter(this);
@@ -84,48 +93,106 @@ public class MainActivity extends Activity {
         //logic
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, final View view, int position, long id) {
-                if (currentPos < 0 ) {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if(firstPress && !truePositions[position]){ //First Image Press
+                    System.out.println("FIRST PRESS");
+                    //Start Timer
+                    firstPress = false;
+                    currentView = (ImageView) view;
+                    currentView.setImageResource(drawable[pos[position]]);
                     currentPos = position;
-                    curView = (ImageView) view;
-                    ((ImageView) view).setImageResource(drawable[pos[position]]);
                 }
-                else {
-                    if (currentPos == position) {
-                        //((ImageView) view).setImageResource(R.drawable.unknown); //do nothing
-                    } else if (pos[currentPos] != pos[position]) {
-                        ((ImageView) view).setImageResource(drawable[pos[position]]);
-                        Toast.makeText(MainActivity.this, "Not Match!", Toast.LENGTH_LONG).show();
-                        Handler handler = new Handler();
-                        handler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                ((ImageView) view).setImageResource(R.drawable.unknown);
-                                curView.setImageResource(R.drawable.unknown);
-                            }
-                        }, 1000);
-
-                    } else if(pos[currentPos] == pos[position]){
-                        ((ImageView) view).setImageResource(drawable[pos[position]]);
-                        ((ImageView) view).setOnClickListener(null);
-                        curView.setOnClickListener(null);
-                        ((ImageView) view).setFocusable(false);
-                        curView.setFocusable(false);
+                else if(!firstPress){
+                    oldView = currentView;
+                    currentView = (ImageView) view;
+                    if((pos[currentPos] == pos[position]) && (oldView.getX() != currentView.getX())){ //Image Match
+                        System.out.println("MATCH");
+                        currentView.setImageResource(drawable[pos[position]]);
                         truePositions[currentPos] = true;
                         truePositions[position] = true;
+                        currentView.setEnabled(false);
+//                        currentView.setClickable(false);
+//                        currentView.setOnClickListener(null);
+                        oldView.setEnabled(false);
+//                        oldView.setClickable(false);
+//                        oldView.setOnClickListener(null);
+                        firstPress = true;
                         if (!(Arrays.asList(truePositions).contains(false))) {
                             Toast.makeText(MainActivity.this, "You Win!", Toast.LENGTH_LONG).show();
                             Handler handler = new Handler();
                             handler.postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
+                                    gridView.setEnabled(false);
                                     gridView.setVisibility(View.INVISIBLE);
                                 }
                             }, 1000);
                         }
                     }
-                    currentPos = -1;
+                    else if(pos[currentPos] != pos[position]){ //Not Matching
+                        System.out.println("MISMATCH");
+                        truePositions[currentPos] = false;
+                        currentView.setImageResource(drawable[pos[position]]);
+                        Toast.makeText(MainActivity.this, "Not Match!", Toast.LENGTH_LONG).show();
+                        gridView.setEnabled(false);
+                        Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                oldView.setImageResource(R.drawable.unknown);
+                                currentView.setImageResource(R.drawable.unknown);
+                                firstPress = true;
+                                gridView.setEnabled(true);
+                            }
+                        }, 1000);
+                    }
+                    else{
+                        System.out.println("ANA HENA");
+                    }
                 }
+
+//                if (currentPos < 0 ) {
+//                    currentPos = position;
+//                    curView = (ImageView) view;
+//                    ((ImageView) view).setImageResource(drawable[pos[position]]);
+//
+//                }
+//                else {
+//                    if (currentPos == position) {
+//                        //((ImageView) view).setImageResource(R.drawable.unknown); //do nothing
+//                    } else if (pos[currentPos] != pos[position]) {
+//                        ((ImageView) view).setImageResource(drawable[pos[position]]);
+//                        Toast.makeText(MainActivity.this, "Not Match!", Toast.LENGTH_LONG).show();
+//                        Handler handler = new Handler();
+//                        handler.postDelayed(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                ((ImageView) view).setImageResource(R.drawable.unknown);
+//                                curView.setImageResource(R.drawable.unknown);
+//                            }
+//                        }, 1000);
+//
+//                    } else if(pos[currentPos] == pos[position]){
+//                        ((ImageView) view).setImageResource(drawable[pos[position]]);
+//                        ((ImageView) view).setOnClickListener(null);
+//                        curView.setOnClickListener(null);
+//                        ((ImageView) view).setFocusable(false);
+//                        curView.setFocusable(false);
+//                        truePositions[currentPos] = true;
+//                        truePositions[position] = true;
+//                        if (!(Arrays.asList(truePositions).contains(false))) {
+//                            Toast.makeText(MainActivity.this, "You Win!", Toast.LENGTH_LONG).show();
+//                            Handler handler = new Handler();
+//                            handler.postDelayed(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    gridView.setVisibility(View.INVISIBLE);
+//                                }
+//                            }, 1000);
+//                        }
+//                    }
+//                    currentPos = -1;
+//                }
             }
         });
 
