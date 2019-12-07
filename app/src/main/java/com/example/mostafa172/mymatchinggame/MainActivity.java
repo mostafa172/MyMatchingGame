@@ -9,10 +9,12 @@ import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Layout;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.View;
@@ -23,17 +25,18 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 
 public class MainActivity extends Activity {
-
-//    public DisplayMetrics metrics = this.getResources().getDisplayMetrics();
-//    int screenWidth = metrics.widthPixels;
 
     static float scale;
     static int pixels;
@@ -41,13 +44,10 @@ public class MainActivity extends Activity {
     boolean firstPress = true;
     ImageView currentView = null;
     ImageView oldView = null;
-    Drawable currentDrawable = null;
-    Drawable oldDrawable = null;
 
-//    ImageView curView = null;
-//    ImageView secondView = null;
+    boolean gameStarted = false;
+    CountUpTimer timer;
 
-    private int countPair = 0;
     static int[] drawable = new int[] {
             R.drawable.sample_0,
             R.drawable.sample_1,
@@ -58,7 +58,9 @@ public class MainActivity extends Activity {
     Boolean[] truePositions = {false, false, false, false, false, false, false, false};
     int currentPos = -1;
 
-    Button exitButton, restartButton;
+    Button restartButton;
+    TextView timerTextView, scoreTextView;
+    int scoreOldValue, secs;
 
     public static void shuffleArray(int[] tempArr){
         Random rand = new Random();
@@ -76,12 +78,15 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE); // lock landscape mode
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); // lock portrait mode
+
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN); // remove status bar
 
-        exitButton = (Button) findViewById(R.id.exitButton);
         restartButton = (Button) findViewById(R.id.restartButton);
+
+        timerTextView = (TextView) findViewById(R.id.timerTextView);
+        scoreTextView = (TextView) findViewById(R.id.scoreTextView);
 
         scale = this.getResources().getDisplayMetrics().density;
         pixels = (int) (150 * MainActivity.scale + 0.5f);
@@ -104,6 +109,15 @@ public class MainActivity extends Activity {
                     currentView = (ImageView) view;
                     currentView.setImageResource(drawable[pos[position]]);
                     currentPos = position;
+                    if(!gameStarted){
+                        gameStarted = true;
+                        timer = new CountUpTimer(100000) {
+                            public void onTick(int second) {
+                                timerTextView.setText(String.valueOf(second));
+                            }
+                        };
+                        timer.start();
+                    }
                 }
                 else if(!firstPress){
                     oldView = currentView;
@@ -118,8 +132,12 @@ public class MainActivity extends Activity {
                         currentView.setEnabled(false);
                         oldView.setEnabled(false);
                         firstPress = true;
-                        if (!(Arrays.asList(truePositions).contains(false))) {
+                        scoreOldValue = Integer.parseInt(scoreTextView.getText().toString());
+                        secs = Integer.parseInt(timerTextView.getText().toString());
+                        scoreTextView.setText(scoreOldValue + (100/(secs+100)*100));
+                        if (!(Arrays.asList(truePositions).contains(false))) { //Win situation
                             Toast.makeText(MainActivity.this, "You Win!", Toast.LENGTH_LONG).show();
+                            timer.cancel();
                             Handler handler = new Handler();
                             handler.postDelayed(new Runnable() {
                                 @Override
@@ -137,6 +155,8 @@ public class MainActivity extends Activity {
                         Toast.makeText(MainActivity.this, "Not Match!", Toast.LENGTH_LONG).show();
                         gridView.setEnabled(false);
                         Handler handler = new Handler();
+                        scoreOldValue = Integer.parseInt(scoreTextView.getText().toString());
+                        scoreTextView.setText(scoreOldValue - 50);
                         handler.postDelayed(new Runnable() {
                             @Override
                             public void run() {
@@ -148,19 +168,10 @@ public class MainActivity extends Activity {
                         }, 1000);
                     }
                     else{
-                        System.out.println("ANA HENA");
+                        System.out.println("ANA HENA");//Do nothing
                     }
                 }
 
-            }
-        });
-
-        //Exit on Click
-        exitButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                finish();
-                System.exit(0);
             }
         });
 
@@ -168,16 +179,9 @@ public class MainActivity extends Activity {
         restartButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                Intent intent = getIntent();
-//                finish();
-//                startActivity(intent);
-                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                int mPendingIntentId = 123456;
-                PendingIntent mPendingIntent = PendingIntent.getActivity(getApplicationContext(), mPendingIntentId, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-                AlarmManager mgr = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-                mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
-                System.exit(0);
-
+                Intent intent = getIntent();
+                finish();
+                startActivity(intent);
             }
         });
 
@@ -212,15 +216,35 @@ class myPhotoAdapter extends BaseAdapter {
         ImageView imageView;
         if (convertView == null) {
             imageView = new ImageView(this.context);
-
-//            imageView.setLayoutParams(new GridView.LayoutParams(screenWidth/2, screenWidth/2));
-//            imageView.setPadding(15, 15, 15, 15);
-
             imageView.setLayoutParams(new GridView.LayoutParams(MainActivity.pixels, MainActivity.pixels));
             imageView.setScaleType(ImageView.ScaleType.FIT_XY);
         }
         else imageView = (ImageView)convertView;
         imageView.setImageResource(R.drawable.unknown);
         return imageView;
+    }
+}
+
+// Count Up Timer
+abstract class CountUpTimer extends CountDownTimer {
+    private static final long INTERVAL_MS = 1000;
+    private final long duration;
+
+    protected CountUpTimer(long durationMs) {
+        super(durationMs, INTERVAL_MS);
+        this.duration = durationMs;
+    }
+
+    public abstract void onTick(int second);
+
+    @Override
+    public void onTick(long msUntilFinished) {
+        int second = (int) ((duration - msUntilFinished) / 1000);
+        onTick(second);
+    }
+
+    @Override
+    public void onFinish() {
+        onTick(duration / 1000);
     }
 }
