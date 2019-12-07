@@ -45,7 +45,6 @@ public class MainActivity extends Activity {
     static int pixels;
 
     static MediaPlayer myMediaPlayer;
-
     boolean firstPress = true;
     ImageView currentView = null;
     ImageView oldView = null;
@@ -84,6 +83,15 @@ public class MainActivity extends Activity {
             int temp = tempArr[randomIndexToSwap];
             tempArr[randomIndexToSwap] = tempArr[i];
             tempArr[i] = temp;
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();  // Always call the superclass method first
+        // do what you want to do here
+        if(myMediaPlayer != null) {
+            myMediaPlayer.stop();
         }
     }
 
