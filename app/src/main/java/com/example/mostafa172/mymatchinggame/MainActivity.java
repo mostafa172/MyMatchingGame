@@ -38,6 +38,8 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends Activity {
 
+    LinearLayout layoutBG;
+
     static float scale;
     static int pixels;
 
@@ -46,6 +48,7 @@ public class MainActivity extends Activity {
     ImageView oldView = null;
 
     boolean gameStarted = false;
+    boolean imageMatch, imageMisMatch = false;
     CountUpTimer timer;
 
     static int[] drawable = new int[] {
@@ -60,7 +63,7 @@ public class MainActivity extends Activity {
 
     Button restartButton;
     TextView timerTextView, scoreTextView;
-    int scoreOldValue, secs;
+    int scoreOldValue = 0 , secs, currentScore = 0;
 
     public static void shuffleArray(int[] tempArr){
         Random rand = new Random();
@@ -79,6 +82,8 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); // lock portrait mode
+
+        layoutBG =(LinearLayout)findViewById(R.id.backgroundLayout);
 
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN); // remove status bar
@@ -104,13 +109,13 @@ public class MainActivity extends Activity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if(firstPress && !truePositions[position]){ //First Image Press
                     System.out.println("FIRST PRESS");
-                    //Start Timer
                     firstPress = false;
                     currentView = (ImageView) view;
                     currentView.setImageResource(drawable[pos[position]]);
                     currentPos = position;
                     if(!gameStarted){
                         gameStarted = true;
+                        //Timer
                         timer = new CountUpTimer(100000) {
                             public void onTick(int second) {
                                 timerTextView.setText(String.valueOf(second));
@@ -126,17 +131,15 @@ public class MainActivity extends Activity {
                     currentView.setId(R.id.currentView);
                     if((pos[currentPos] == pos[position]) && ((oldView.getId() != currentView.getId())) ){ //Image Match
                         System.out.println("MATCH");
+                        imageMatch = true;
                         currentView.setImageResource(drawable[pos[position]]);
+                        Toast.makeText(MainActivity.this, "Match!", Toast.LENGTH_LONG).show();
                         truePositions[currentPos] = true;
                         truePositions[position] = true;
                         currentView.setEnabled(false);
                         oldView.setEnabled(false);
                         firstPress = true;
-                        scoreOldValue = Integer.parseInt(scoreTextView.getText().toString());
-                        secs = Integer.parseInt(timerTextView.getText().toString());
-                        scoreTextView.setText(scoreOldValue + (100/(secs+100)*100));
                         if (!(Arrays.asList(truePositions).contains(false))) { //Win situation
-                            Toast.makeText(MainActivity.this, "You Win!", Toast.LENGTH_LONG).show();
                             timer.cancel();
                             Handler handler = new Handler();
                             handler.postDelayed(new Runnable() {
@@ -144,19 +147,19 @@ public class MainActivity extends Activity {
                                 public void run() {
                                     gridView.setEnabled(false);
                                     gridView.setVisibility(View.INVISIBLE);
+                                    layoutBG.setBackgroundResource(R.drawable.gothambgvictory);
                                 }
                             }, 1000);
                         }
                     }
                     else if(pos[currentPos] != pos[position]){ //Not Matching
                         System.out.println("MISMATCH");
+                        imageMisMatch = true;
                         truePositions[currentPos] = false;
                         currentView.setImageResource(drawable[pos[position]]);
                         Toast.makeText(MainActivity.this, "Not Match!", Toast.LENGTH_LONG).show();
                         gridView.setEnabled(false);
                         Handler handler = new Handler();
-                        scoreOldValue = Integer.parseInt(scoreTextView.getText().toString());
-                        scoreTextView.setText(scoreOldValue - 50);
                         handler.postDelayed(new Runnable() {
                             @Override
                             public void run() {
@@ -168,10 +171,25 @@ public class MainActivity extends Activity {
                         }, 1000);
                     }
                     else{
-                        System.out.println("ANA HENA");//Do nothing
+                        //Do nothing
+                    }
+
+                    //Calculate Score
+                    scoreOldValue = Integer.parseInt(scoreTextView.getText().toString());
+                    int secs = Integer.parseInt(timerTextView.getText().toString());
+                    if(imageMatch){
+                        currentScore = scoreOldValue + (int)((100/(secs+100f))*100);
+                        scoreTextView.setText(currentScore+"");
+                        imageMatch = false;
+                    }
+                    else if(imageMisMatch){
+                        scoreTextView.setText((scoreOldValue - 50)+"");
+                        imageMisMatch = false;
+                    }
+                    else{
+                        // Do nothing
                     }
                 }
-
             }
         });
 

@@ -21,6 +21,7 @@
         android:padding="20dp"
         android:stretchMode="columnWidth"
         android:verticalSpacing="10dp">
+
     </GridView>
 
     <LinearLayout
@@ -112,8 +113,7 @@
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/restartbutton"
-                    android:gravity="center_vertical|center_horizontal"
-                    android:text="@string/restartButton" />
+                    android:gravity="center_vertical|center_horizontal" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
