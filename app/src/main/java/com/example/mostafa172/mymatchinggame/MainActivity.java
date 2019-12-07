@@ -9,6 +9,7 @@ import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.media.MediaPlayer;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
@@ -43,6 +44,8 @@ public class MainActivity extends Activity {
     static float scale;
     static int pixels;
 
+    static MediaPlayer myMediaPlayer;
+
     boolean firstPress = true;
     ImageView currentView = null;
     ImageView oldView = null;
@@ -57,6 +60,14 @@ public class MainActivity extends Activity {
             R.drawable.sample_2,
             R.drawable.sample_3
     };
+
+    static int[] music = new int[] {
+            R.raw.batman,
+            R.raw.flash,
+            R.raw.superman,
+            R.raw.joker
+    };
+
     int[] pos = {0,1,2,3,0,1,2,3};
     Boolean[] truePositions = {false, false, false, false, false, false, false, false};
     int currentPos = -1;
@@ -112,6 +123,11 @@ public class MainActivity extends Activity {
                     firstPress = false;
                     currentView = (ImageView) view;
                     currentView.setImageResource(drawable[pos[position]]);
+                    if (myMediaPlayer != null && myMediaPlayer.isPlaying()){
+                        myMediaPlayer.stop();
+                    }
+                    myMediaPlayer = MediaPlayer.create(getApplicationContext(), music[pos[position]]);
+                    myMediaPlayer.start();
                     currentPos = position;
                     if(!gameStarted){
                         gameStarted = true;
@@ -133,6 +149,11 @@ public class MainActivity extends Activity {
                         System.out.println("MATCH");
                         imageMatch = true;
                         currentView.setImageResource(drawable[pos[position]]);
+                        if (myMediaPlayer != null && myMediaPlayer.isPlaying()){
+                            myMediaPlayer.stop();
+                        }
+                        myMediaPlayer = MediaPlayer.create(getApplicationContext(), music[pos[position]]);
+                        myMediaPlayer.start();
                         Toast.makeText(MainActivity.this, "Match!", Toast.LENGTH_LONG).show();
                         truePositions[currentPos] = true;
                         truePositions[position] = true;
@@ -148,6 +169,12 @@ public class MainActivity extends Activity {
                                     gridView.setEnabled(false);
                                     gridView.setVisibility(View.INVISIBLE);
                                     layoutBG.setBackgroundResource(R.drawable.gothambgvictory);
+                                    myMediaPlayer.seekTo(0);
+                                    if (myMediaPlayer != null && myMediaPlayer.isPlaying()){
+                                        myMediaPlayer.stop();
+                                    }
+                                    myMediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.victorytheme);
+                                    myMediaPlayer.start();
                                 }
                             }, 1000);
                         }
@@ -159,6 +186,11 @@ public class MainActivity extends Activity {
                         currentView.setImageResource(drawable[pos[position]]);
                         Toast.makeText(MainActivity.this, "Not Match!", Toast.LENGTH_LONG).show();
                         gridView.setEnabled(false);
+                        if (myMediaPlayer != null && myMediaPlayer.isPlaying()){
+                            myMediaPlayer.stop();
+                        }
+                        myMediaPlayer = MediaPlayer.create(getApplicationContext(), music[pos[position]]);
+                        myMediaPlayer.start();
                         Handler handler = new Handler();
                         handler.postDelayed(new Runnable() {
                             @Override
@@ -183,12 +215,13 @@ public class MainActivity extends Activity {
                         imageMatch = false;
                     }
                     else if(imageMisMatch){
-                        scoreTextView.setText((scoreOldValue - 50)+"");
+                        scoreTextView.setText((scoreOldValue - 40)+"");
                         imageMisMatch = false;
                     }
                     else{
                         // Do nothing
                     }
+
                 }
             }
         });
@@ -197,6 +230,7 @@ public class MainActivity extends Activity {
         restartButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                myMediaPlayer.stop();
                 Intent intent = getIntent();
                 finish();
                 startActivity(intent);

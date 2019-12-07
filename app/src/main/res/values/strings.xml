@@ -2,7 +2,7 @@
     <string name="app_name">MyMatchingGame</string>
     <string name="restartButton">Restart</string>
     <string name="exitButton">Exit</string>
-    <string name="timerTextView">0:00</string>
+    <string name="timerTextView">0</string>
     <string name="scoreTextView">0</string>
     <string name="scoreLabel">Score:</string>
     <string name="timeLabel">Time:</string>
