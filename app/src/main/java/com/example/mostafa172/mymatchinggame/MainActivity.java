@@ -1,23 +1,13 @@
 package com.example.mostafa172.mymatchinggame;
 
 import android.app.Activity;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.os.CountDownTimer;
 import android.os.Handler;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Layout;
-import android.util.DisplayMetrics;
-import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -27,14 +17,11 @@ import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 
 public class MainActivity extends Activity {
@@ -73,7 +60,7 @@ public class MainActivity extends Activity {
 
     Button restartButton;
     TextView timerTextView, scoreTextView;
-    int scoreOldValue = 0 , secs, currentScore = 0;
+    int scoreOldValue = 0, currentScore = 0;
 
     public static void shuffleArray(int[] tempArr){
         Random rand = new Random();
@@ -113,7 +100,10 @@ public class MainActivity extends Activity {
         scoreTextView = (TextView) findViewById(R.id.scoreTextView);
 
         scale = this.getResources().getDisplayMetrics().density;
+        System.out.println("SCALE:" + scale);
         pixels = (int) (150 * MainActivity.scale + 0.5f);
+        System.out.println("SCALE:" + pixels);
+
 
         shuffleArray(pos); //shuffling drawable elements positions
 
@@ -238,7 +228,8 @@ public class MainActivity extends Activity {
         restartButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                myMediaPlayer.stop();
+                if(myMediaPlayer != null)
+                    myMediaPlayer.stop();
                 Intent intent = getIntent();
                 finish();
                 startActivity(intent);
