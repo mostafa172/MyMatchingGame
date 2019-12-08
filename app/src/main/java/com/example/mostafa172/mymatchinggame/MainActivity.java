@@ -4,16 +4,20 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.media.Image;
 import android.media.MediaPlayer;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Bundle;
+import android.support.v7.widget.AppCompatImageView;
+import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.GridLayout;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -26,10 +30,9 @@ import java.util.Random;
 
 public class MainActivity extends Activity {
 
-    LinearLayout layoutBG;
+    static LinearLayout layoutBG;
 
-    static float scale;
-    static int pixels;
+    static int valueInPixels;
 
     static MediaPlayer myMediaPlayer;
     boolean firstPress = true;
@@ -61,6 +64,8 @@ public class MainActivity extends Activity {
     Button restartButton;
     TextView timerTextView, scoreTextView;
     int scoreOldValue = 0, currentScore = 0;
+
+    static GridView gridView;
 
     public static void shuffleArray(int[] tempArr){
         Random rand = new Random();
@@ -99,17 +104,13 @@ public class MainActivity extends Activity {
         timerTextView = (TextView) findViewById(R.id.timerTextView);
         scoreTextView = (TextView) findViewById(R.id.scoreTextView);
 
-        scale = this.getResources().getDisplayMetrics().density;
-        System.out.println("SCALE:" + scale);
-        pixels = (int) (150 * MainActivity.scale + 0.5f);
-        System.out.println("SCALE:" + pixels);
-
+        valueInPixels = (int) getResources().getDimension(R.dimen._92sdp);
 
         shuffleArray(pos); //shuffling drawable elements positions
 
         //loading grids
         myPhotoAdapter photoAdapter = new myPhotoAdapter(this);
-        final GridView gridView = (GridView)findViewById(R.id.gridView);
+        gridView = (GridView)findViewById(R.id.gridView);
         gridView.setAdapter(photoAdapter);
 
         //logic
@@ -130,7 +131,7 @@ public class MainActivity extends Activity {
                     if(!gameStarted){
                         gameStarted = true;
                         //Timer
-                        timer = new CountUpTimer(100000) {
+                        timer = new CountUpTimer(101000) {
                             public void onTick(int second) {
                                 timerTextView.setText(String.valueOf(second));
                             }
@@ -267,8 +268,9 @@ class myPhotoAdapter extends BaseAdapter {
         ImageView imageView;
         if (convertView == null) {
             imageView = new ImageView(this.context);
-            imageView.setLayoutParams(new GridView.LayoutParams(MainActivity.pixels, MainActivity.pixels));
-            imageView.setScaleType(ImageView.ScaleType.FIT_XY);
+            imageView.setLayoutParams(new GridView.LayoutParams(MainActivity.valueInPixels, MainActivity.valueInPixels));
+            imageView.setAdjustViewBounds(true);
+            imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         }
         else imageView = (ImageView)convertView;
         imageView.setImageResource(R.drawable.unknown);
@@ -297,5 +299,9 @@ abstract class CountUpTimer extends CountDownTimer {
     @Override
     public void onFinish() {
         onTick(duration / 1000);
+        MainActivity.gridView.setEnabled(false);
+        MainActivity.gridView.setVisibility(View.INVISIBLE);
+        MainActivity.layoutBG.setBackgroundResource(R.drawable.gothambglose);
     }
 }
+
