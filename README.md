@@ -1,2 +1,2 @@
 # MyMatchingGame
-A simple picture matching android game.
+A simple DC Comics themed picture matching android game.
